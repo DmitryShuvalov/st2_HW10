@@ -10,13 +10,16 @@ import UIKit
 
 class HeroesViewController: UITableViewController {
     
-    private var heroes: [Hero] = []
+    private var heroes: [Hero] = [] {
+        didSet {
+            tableView.reloadData()
+        }
+    }
     private let apiHeroesUrl = "https://rickandmortyapi.com/api/character/"
 
     override func viewDidLoad() {
-        self.navigationController?.navigationBar.isTranslucent = true
-        self.navigationController?.view.backgroundColor = UIColor.clear
-        
+        super.viewDidLoad()
+        fetchData()
     }
 
     // MARK: - Table view data source
@@ -35,22 +38,23 @@ class HeroesViewController: UITableViewController {
            return cell
        }
     
-       func fetchData() {
-           guard let url = URL(string: apiHeroesUrl) else {return}
-           
-           URLSession.shared.dataTask(with: url) { (data, _, _) in
-               guard let data = data else {return}
-               do {
-                   let heroesFull = try JSONDecoder().decode(Heroes.self, from: data)
-                   self.heroes = heroesFull.results!
-                   print(self.heroes)
-               } catch let error {
-                   print(error)
-               }
-               
-           }.resume()
-    
-       }
+    func fetchData() {
+        guard let url = URL(string: apiHeroesUrl) else {return}
+        
+        URLSession.shared.dataTask(with: url) { (data, _, _) in
+            guard let data = data else {return}
+            
+            DispatchQueue.main.async {
+                do {
+                    let heroesFull = try JSONDecoder().decode(Heroes.self, from: data)
+                    self.heroes = heroesFull.results!
+                    print(self.heroes)
+                } catch let error {
+                    print(error)
+                }
+            }
+        }.resume()
+    }
     
 
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
